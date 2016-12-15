@@ -1,5 +1,18 @@
 import itertools
 
+def remove_equivalent_pairs(items):
+    generators = set([ i[0] for i in items if i[1] == "G"])
+    chips = set([ i[0] for i in items if i[1] == "M" ])
+
+    paired = chips.intersection(generators)
+
+    if len(paired) > 0:
+        items = set(items).difference([ p + "G" for p in paired ]).difference(set([ p + "M" for p in paired ]))
+        p = list(paired)[0]
+        return items.union([ p + "M", p + "G" ])
+
+    return items
+    
 def combination_allowed(items):
     generators = set([ i[0] for i in items if i[1] == "G" ])
     chips = set([ i[0] for i in items if i[1] == "M" ])
@@ -12,6 +25,24 @@ def combination_allowed(items):
         return False
 
     return True
+
+def get_canonical_hashable_state(state):
+    pos = state[0]
+    floors = state[1]
+    items_ordered = sorted(floors[0]) + sorted(floors[1]) + sorted(floors[2]) + sorted(floors[3])
+
+    next_ord = 65
+    mappings = {}
+    for i in items_ordered:
+        if i[0] in mappings:
+            continue
+        if i[0] not in mappings:
+            mappings[i[0]] = chr(next_ord)
+            next_ord += 1
+
+    canon_floors = "#".join([ "".join(sorted(map(lambda item: mappings[item[0]] + item[1] , f))) for f in floors ])
+    #canon_floors = "#".join([ "".join(sorted(f)) for f in floors ])
+    return "%s %s"%(pos, canon_floors)
 
 def bfs(initial):
     q = [ (0, initial) ]
@@ -28,7 +59,7 @@ def bfs(initial):
             num_moves = depth
             print depth
 
-        hashablestate = "%s %s"%(state[0], "#".join([ "".join(sorted(s)) for s in state[1]]))
+        hashablestate = get_canonical_hashable_state(state)
         if hashablestate in known_states:
             continue
 
@@ -40,7 +71,7 @@ def bfs(initial):
             print "YAY", depth
             exit (0)
 
-        items = floors[pos]
+        items = remove_equivalent_pairs(floors[pos])
         combos = [ (i,) for i in items ]
         combos.extend([ combo for combo in itertools.combinations(items, 2)])
         # there can be invalid combos but they are filtered out when evaluating newfloor
@@ -71,6 +102,7 @@ def day11_part1():
 
 def day11_part2():
     bfs((0, [set(["EG", "EM", "DG", "DM", "SG","SM","PG","PM"]), set(["TG","RG","RM","CG","CM"]), set(["TM"]), set()]))
+
 
 if __name__=="__main__":
     #test()
