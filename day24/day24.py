@@ -65,33 +65,41 @@ def build_point_distance_graph(grid):
         result[m1] = links
 
         for m2,p2 in grid.points.iteritems():
-            links.append((m2, bfs_min_distance(grid, p1, p2)))
+            if m1 != m2:
+                links.append((m2, bfs_min_distance(grid, p1, p2)))
+
 
     return result
 
-def depth_first_shortest_path(graph, current='0', visited=set(), distance = 0):
-    print visited
+def depth_first_shortest_path(graph, current='0', visited=[], distance = 0):
+    #print
+    #print "current",current
+    #print "neighbours ", graph[current]
+    #print "visited ", visited
+    #print "distance", distance
+    #print len(graph), len(visited)
+
+    if len(visited) > 0 and len(visited) < len(graph):
+        if visited[-1] == '0':
+            #print "Stopping early because returned to 0"
+            return 100000
+
     if len(graph) == len(visited):
-        return distance
+        if visited[-1] == '0':
+            #print "Found a solution"
+            return distance
+        return 2000000
 
     best = 100000
 
-    print "a add", current
-    visited.add(current)
     for p, d in graph[current]:
         if p not in visited:
-            #visited.add(p)
-            #print "b add", p
+            visited.append(p)
             dist = depth_first_shortest_path(graph, p, visited, distance + d)
             if dist < best:
                 best = dist
-            #print "b remove", p
-            #visited.remove(p)
+            visited.pop()
 
-    print "a remove", current
-    visited.remove(current)
-
-    if best == 100000: return distance
     return best
 
 def samples():
@@ -104,7 +112,7 @@ def samples():
     #print bfs_min_distance(grid, grid.points['0'], grid.points['1'])
 
     graph = build_point_distance_graph(grid)
-    #print graph
+    print graph
     print depth_first_shortest_path(graph, '0')
 
 if __name__=="__main__":
